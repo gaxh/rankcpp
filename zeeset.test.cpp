@@ -8,7 +8,7 @@ int main() {
     std::mt19937 rng;
     rng.seed(time(NULL));
 
-    unsigned max_id = 30000;
+    unsigned max_id = 30;
 
     for(unsigned i = 0; i < max_id; ++i) {
         static char buf[1024];
@@ -56,11 +56,12 @@ int main() {
             std::cout << "foreach rank " << rank << ": " << "[" << key << "]=" << value << "\n";
             });
 
-    rank.DeleteByRangedRank(5, 10, [](unsigned long rank, const std::string &key, const unsigned long &value){
+    rank.DeleteByRangedRank(5, 100, [](unsigned long rank, const std::string &key, const unsigned long &value){
             std::cout << "delete_range rank " << rank << ": " << "[" << key << "]=" << value << "\n";
             });
 
     std::cout << rank.DumpLevels() << "\n";
+    std::cout << "rank count: " << rank.Count() << "\n";
 
     return 0;
 }

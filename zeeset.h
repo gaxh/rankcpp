@@ -71,6 +71,14 @@ public:
         }
     }
 
+    unsigned long Length() {
+        return m_length;
+    }
+
+    unsigned long MaxRank() {
+        return m_length;
+    }
+
 private:
     Node *CreateNode(int level, const KEY_TYPE &key, const VALUE_TYPE &value) {
         return new Node(level, key, value);
@@ -419,7 +427,7 @@ public:
             x = x->LEVEL[0].FORWARD;
         }
 
-        ss << "(sumary) " << "[level]=" << m_level << "\n";
+        ss << "(sumary) " << "[level]=" << m_level << ", " << "[length]=" << m_length << "\n";
 
         return ss.str();
     }
@@ -437,6 +445,14 @@ public:
 
     ~ZeeSet() {
         delete m_skiplist;
+    }
+
+    unsigned long Length() {
+        return m_skiplist->Length();
+    }
+
+    unsigned long MaxRank() {
+        return m_skiplist->MaxRank();
     }
 
     size_t Count() {
@@ -495,7 +511,13 @@ public:
     }
 
     void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
-        m_skiplist->DeleteByRangedRank(rank_low, rank_high, cb);
+        m_skiplist->DeleteByRangedRank(rank_low, rank_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value){
+                    this->m_dict.erase(key);
+
+                    if(cb) {
+                        cb( rank, key, value );
+                    }
+                });
     }
 
     std::string DumpLevels() {
