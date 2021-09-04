@@ -272,7 +272,7 @@ private:
     }
 
     Node *GetNodeByRank(unsigned long rank) {
-        if(rank == 0) {
+        if(rank == 0 || rank > m_length) {
             return NULL;
         }
 
@@ -351,9 +351,7 @@ private:
         while(x && n < count) {
             Node *next = x->LEVEL[0].FORWARD;
             RemoveNodeOnly(x, update);
-            if(cb) {
-                cb( rank_low + n, x );
-            }
+            cb( rank_low + n, x );
             FreeNode(x);
             x = next;
             n++;
@@ -404,9 +402,7 @@ public:
 
     void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
         DeleteNodeByRangedRank(rank_low, rank_high, [cb](unsigned long rank, Node *n){
-                    if(cb){
-                        cb(rank, n->KEY, n->VALUE);
-                    }
+                    cb(rank, n->KEY, n->VALUE);
                 });
     }
 
