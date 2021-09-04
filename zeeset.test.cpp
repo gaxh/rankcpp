@@ -106,6 +106,33 @@ int main() {
         std::cout << "\n";
     }
 
+    {
+        unsigned long rd_value_min = rng() % max_value;
+        unsigned long rd_value_max = rng() % max_value;
+
+        std::cout << "rd_value_min=" << rd_value_min << " " << "rd_value_max=" << rd_value_max << "\n";
+
+        rank.GetElementsByRangedValue(rd_value_min, false, rd_value_max, false, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
+                std::cout << rd_value_min << "<v<" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
+                });
+        std::cout << "\n";
+
+        rank.GetElementsByRangedValue(rd_value_min, true, rd_value_max, false, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
+                std::cout << rd_value_min << "<=v<" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
+                });
+        std::cout << "\n";
+
+        rank.GetElementsByRangedValue(rd_value_min, false, rd_value_max, true, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
+                std::cout << rd_value_min << "<v<=" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
+                });
+        std::cout << "\n";
+
+        rank.GetElementsByRangedValue(rd_value_min, true, rd_value_max, true, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
+                std::cout << rd_value_min << "<=v<=" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
+                });
+        std::cout << "\n";
+    }
+
     return 0;
 }
 

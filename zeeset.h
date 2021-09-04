@@ -562,6 +562,30 @@ public:
         }
     }
 
+    void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+        unsigned long rank;
+        Node *first = include_v_low ? GetNodeOfFirstGreaterEqualValue(v_low, &rank) :
+            GetNodeOfFirstGreaterValue(v_low, &rank);
+
+        if(!first) {
+            return;
+        }
+
+        unsigned long rank2;
+        Node *last = include_v_high ? GetNodeOfLastLessEqualValue(v_high, &rank2) :
+            GetNodeOfLastLessValue(v_high, &rank2);
+
+        if(!last) {
+            return;
+        }
+
+        while(rank <= rank2) {
+            cb(rank, first->KEY, first->VALUE);
+            first = first->LEVEL[0].FORWARD;
+            ++rank;
+        }
+    }
+
     std::string DumpLevels() {
         std::ostringstream ss;
         Node *x = m_header->LEVEL[0].FORWARD;
@@ -686,6 +710,10 @@ public:
 
     bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
         return m_skiplist->GetElementOfLastLessEqualValue(v, key, value, rank);
+    }
+
+    void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+        m_skiplist->GetElementsByRangedValue(v_low, include_v_low, v_high, include_v_high, cb);
     }
 
     std::string DumpLevels() {
