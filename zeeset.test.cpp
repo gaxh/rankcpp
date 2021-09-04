@@ -71,33 +71,34 @@ int main() {
 
         std::string key;
         unsigned long value;
+        unsigned long rank_value;
 
-        if( rank.GetElementOfFirstGreaterValue(rd_value, key, value) ) {
-            std::cout << "first > " << rd_value << ": " << "[" << key << "]=" << value;
+        if( rank.GetElementOfFirstGreaterValue(rd_value, key, value, &rank_value) ) {
+            std::cout << "first > " << rd_value << ": " << "[" << key << "]=" << value << " (rank:" << rank_value << ")";
         } else {
             std::cout << "first > " << rd_value << ": " << "NONE";
         }
 
         std::cout << " | ";
 
-        if( rank.GetElementOfFirstGreaterEqualValue(rd_value, key, value) ) {
-            std::cout << "first >= " << rd_value << ": " << "[" << key << "]=" << value;
+        if( rank.GetElementOfFirstGreaterEqualValue(rd_value, key, value, &rank_value) ) {
+            std::cout << "first >= " << rd_value << ": " << "[" << key << "]=" << value << " (rank:" << rank_value << ")";
         } else {
             std::cout << "first >= " << rd_value << ": " << "NONE";
         }
         
         std::cout << " | ";
 
-        if( rank.GetElementOfLastLessValue(rd_value, key, value) ) {
-            std::cout << "last < " << rd_value << ": " << "[" << key << "]=" << value;
+        if( rank.GetElementOfLastLessValue(rd_value, key, value, &rank_value) ) {
+            std::cout << "last < " << rd_value << ": " << "[" << key << "]=" << value << " (rank:" << rank_value << ")";
         } else {
             std::cout << "last < " << rd_value << ": " << "NONE";
         }
         
         std::cout << " | ";
 
-        if( rank.GetElementOfLastLessEqualValue(rd_value, key, value) ) {
-            std::cout << "last <= " << rd_value << ": " << "[" << key << "]=" << value;
+        if( rank.GetElementOfLastLessEqualValue(rd_value, key, value, &rank_value) ) {
+            std::cout << "last <= " << rd_value << ": " << "[" << key << "]=" << value << " (rank:" << rank_value << ")";
         } else {
             std::cout << "last <= " << rd_value << ": " << "NONE";
         }

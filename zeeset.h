@@ -358,88 +358,108 @@ private:
         }
     }
 
-    Node *GetNodeOfFirstGreaterValue(const VALUE_TYPE &value) {
+    Node *GetNodeOfFirstGreaterValue(const VALUE_TYPE &value, unsigned long *rank) {
         if( !m_tail || !value_compare_less(value, m_tail->VALUE) ) {
             return NULL;
         }
 
         Node *x;
+        unsigned long traversed = 0;
 
         x = m_header;
 
         for(int i = m_level - 1; i >= 0; --i) {
             while(x->LEVEL[i].FORWARD && !value_compare_less(value, x->LEVEL[i].FORWARD->VALUE)) {
+                traversed += x->LEVEL[i].SPAN;
                 x = x->LEVEL[i].FORWARD;
             }
         }
 
         if(x->LEVEL[0].FORWARD && value_compare_less(value, x->LEVEL[0].FORWARD->VALUE)) {
+            if(rank) {
+                *rank = traversed + 1;
+            }
             return x->LEVEL[0].FORWARD;
         }
 
         return NULL;
     }
 
-    Node *GetNodeOfFirstGreaterEqualValue(const VALUE_TYPE &value) {
+    Node *GetNodeOfFirstGreaterEqualValue(const VALUE_TYPE &value, unsigned long *rank) {
         if( !m_tail || value_compare_less(m_tail->VALUE, value) ) {
             return NULL;
         }
 
         Node *x;
+        unsigned long traversed = 0;
 
         x = m_header;
 
         for(int i = m_level - 1; i >= 0; --i) {
             while(x->LEVEL[i].FORWARD && value_compare_less(x->LEVEL[i].FORWARD->VALUE, value)) {
+                traversed += x->LEVEL[i].SPAN;
                 x = x->LEVEL[i].FORWARD;
             }
         }
 
         if(x->LEVEL[0].FORWARD && !value_compare_less(x->LEVEL[0].FORWARD->VALUE, value)) {
+            if(rank) {
+                *rank = traversed + 1;
+            }
             return x->LEVEL[0].FORWARD;
         }
 
         return NULL;
     }
 
-    Node *GetNodeOfLastLessValue(const VALUE_TYPE &value) {
+    Node *GetNodeOfLastLessValue(const VALUE_TYPE &value, unsigned long *rank) {
         if( !m_header->LEVEL[0].FORWARD || !value_compare_less(m_header->LEVEL[0].FORWARD->VALUE, value) ) {
             return NULL;
         }
 
         Node *x;
+        unsigned long traversed = 0;
 
         x = m_header;
 
         for(int i = m_level - 1; i >= 0; --i) {
             while(x->LEVEL[i].FORWARD && value_compare_less(x->LEVEL[i].FORWARD->VALUE, value)) {
+                traversed += x->LEVEL[i].SPAN;
                 x = x->LEVEL[i].FORWARD;
             }
         }
 
         if(x && value_compare_less(x->VALUE, value)) {
+            if(rank) {
+                *rank = traversed;
+            }
             return x;
         }
 
         return NULL;
     }
 
-    Node *GetNodeOfLastLessEqualValue(const VALUE_TYPE &value) {
+    Node *GetNodeOfLastLessEqualValue(const VALUE_TYPE &value, unsigned long *rank) {
         if( !m_header->LEVEL[0].FORWARD || value_compare_less(value, m_header->LEVEL[0].FORWARD->VALUE) ) {
             return NULL;
         }
 
         Node *x;
+        unsigned long traversed = 0;
 
         x = m_header;
 
         for(int i = m_level - 1; i >= 0; --i) {
             while(x->LEVEL[i].FORWARD && !value_compare_less(value, x->LEVEL[i].FORWARD->VALUE)) {
+                traversed += x->LEVEL[i].SPAN;
                 x = x->LEVEL[i].FORWARD;
             }
         }
 
         if(x && !value_compare_less(value, x->VALUE)) {
+            if(rank) {
+                *rank = traversed;
+            }
             return x;
         }
 
@@ -494,8 +514,8 @@ public:
                 });
     }
 
-    bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        Node *n = GetNodeOfFirstGreaterValue(v);
+    bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        Node *n = GetNodeOfFirstGreaterValue(v, rank);
 
         if(n) {
             key = n->KEY;
@@ -506,8 +526,8 @@ public:
         }
     }
 
-    bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        Node *n = GetNodeOfFirstGreaterEqualValue(v);
+    bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        Node *n = GetNodeOfFirstGreaterEqualValue(v, rank);
 
         if(n) {
             key = n->KEY;
@@ -518,8 +538,8 @@ public:
         }
     }
 
-    bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        Node *n = GetNodeOfLastLessValue(v);
+    bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        Node *n = GetNodeOfLastLessValue(v, rank);
 
         if(n) {
             key = n->KEY;
@@ -530,8 +550,8 @@ public:
         }
     }
 
-    bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        Node *n = GetNodeOfLastLessEqualValue(v);
+    bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        Node *n = GetNodeOfLastLessEqualValue(v, rank);
 
         if(n) {
             key = n->KEY;
@@ -652,20 +672,20 @@ public:
                 });
     }
 
-    bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        return m_skiplist->GetElementOfFirstGreaterValue(v, key, value);
+    bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        return m_skiplist->GetElementOfFirstGreaterValue(v, key, value, rank);
     }
 
-    bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        return m_skiplist->GetElementOfFirstGreaterEqualValue(v, key, value);
+    bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        return m_skiplist->GetElementOfFirstGreaterEqualValue(v, key, value, rank);
     }
 
-    bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        return m_skiplist->GetElementOfLastLessValue(v, key, value);
+    bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        return m_skiplist->GetElementOfLastLessValue(v, key, value, rank);
     }
 
-    bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
-        return m_skiplist->GetElementOfLastLessEqualValue(v, key, value);
+    bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
+        return m_skiplist->GetElementOfLastLessEqualValue(v, key, value, rank);
     }
 
     std::string DumpLevels() {
