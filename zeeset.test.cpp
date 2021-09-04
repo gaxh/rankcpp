@@ -9,11 +9,12 @@ int main() {
     rng.seed(time(NULL));
 
     unsigned max_id = 30;
+    unsigned max_value = 100;
 
     for(unsigned i = 0; i < max_id; ++i) {
         static char buf[1024];
         snprintf(buf, sizeof(buf), "K%u", i);
-        rank.Update(std::string(buf), rng());
+        rank.Update(std::string(buf), rng() % max_value);
     }
 
     for(unsigned j = 0; j < max_id / 2; ++j) {
@@ -56,12 +57,53 @@ int main() {
             std::cout << "foreach rank " << rank << ": " << "[" << key << "]=" << value << "\n";
             });
 
-    rank.DeleteByRangedRank(5, 100, [](unsigned long rank, const std::string &key, const unsigned long &value){
+    /*
+    rank.DeleteByRangedRank(5, 6, [](unsigned long rank, const std::string &key, const unsigned long &value){
             std::cout << "delete_range rank " << rank << ": " << "[" << key << "]=" << value << "\n";
             });
+    */
 
     std::cout << rank.DumpLevels() << "\n";
     std::cout << "rank count: " << rank.Count() << "\n";
+
+    for(int k = 0; k < 10; ++k) {
+        unsigned long rd_value = rng() % max_value;
+
+        std::string key;
+        unsigned long value;
+
+        if( rank.GetElementOfFirstGreaterValue(rd_value, key, value) ) {
+            std::cout << "first > " << rd_value << ": " << "[" << key << "]=" << value;
+        } else {
+            std::cout << "first > " << rd_value << ": " << "NONE";
+        }
+
+        std::cout << " | ";
+
+        if( rank.GetElementOfFirstGreaterEqualValue(rd_value, key, value) ) {
+            std::cout << "first >= " << rd_value << ": " << "[" << key << "]=" << value;
+        } else {
+            std::cout << "first >= " << rd_value << ": " << "NONE";
+        }
+        
+        std::cout << " | ";
+
+        if( rank.GetElementOfLastLessValue(rd_value, key, value) ) {
+            std::cout << "last < " << rd_value << ": " << "[" << key << "]=" << value;
+        } else {
+            std::cout << "last < " << rd_value << ": " << "NONE";
+        }
+        
+        std::cout << " | ";
+
+        if( rank.GetElementOfLastLessEqualValue(rd_value, key, value) ) {
+            std::cout << "last <= " << rd_value << ": " << "[" << key << "]=" << value;
+        } else {
+            std::cout << "last <= " << rd_value << ": " << "NONE";
+        }
+
+        std::cout << "\n";
+    }
 
     return 0;
 }

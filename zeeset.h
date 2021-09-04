@@ -358,6 +358,94 @@ private:
         }
     }
 
+    Node *GetNodeOfFirstGreaterValue(const VALUE_TYPE &value) {
+        if( !m_tail || !value_compare_less(value, m_tail->VALUE) ) {
+            return NULL;
+        }
+
+        Node *x;
+
+        x = m_header;
+
+        for(int i = m_level - 1; i >= 0; --i) {
+            while(x->LEVEL[i].FORWARD && !value_compare_less(value, x->LEVEL[i].FORWARD->VALUE)) {
+                x = x->LEVEL[i].FORWARD;
+            }
+        }
+
+        if(x->LEVEL[0].FORWARD && value_compare_less(value, x->LEVEL[0].FORWARD->VALUE)) {
+            return x->LEVEL[0].FORWARD;
+        }
+
+        return NULL;
+    }
+
+    Node *GetNodeOfFirstGreaterEqualValue(const VALUE_TYPE &value) {
+        if( !m_tail || value_compare_less(m_tail->VALUE, value) ) {
+            return NULL;
+        }
+
+        Node *x;
+
+        x = m_header;
+
+        for(int i = m_level - 1; i >= 0; --i) {
+            while(x->LEVEL[i].FORWARD && value_compare_less(x->LEVEL[i].FORWARD->VALUE, value)) {
+                x = x->LEVEL[i].FORWARD;
+            }
+        }
+
+        if(x->LEVEL[0].FORWARD && !value_compare_less(x->LEVEL[0].FORWARD->VALUE, value)) {
+            return x->LEVEL[0].FORWARD;
+        }
+
+        return NULL;
+    }
+
+    Node *GetNodeOfLastLessValue(const VALUE_TYPE &value) {
+        if( !m_header->LEVEL[0].FORWARD || !value_compare_less(m_header->LEVEL[0].FORWARD->VALUE, value) ) {
+            return NULL;
+        }
+
+        Node *x;
+
+        x = m_header;
+
+        for(int i = m_level - 1; i >= 0; --i) {
+            while(x->LEVEL[i].FORWARD && value_compare_less(x->LEVEL[i].FORWARD->VALUE, value)) {
+                x = x->LEVEL[i].FORWARD;
+            }
+        }
+
+        if(x && value_compare_less(x->VALUE, value)) {
+            return x;
+        }
+
+        return NULL;
+    }
+
+    Node *GetNodeOfLastLessEqualValue(const VALUE_TYPE &value) {
+        if( !m_header->LEVEL[0].FORWARD || value_compare_less(value, m_header->LEVEL[0].FORWARD->VALUE) ) {
+            return NULL;
+        }
+
+        Node *x;
+
+        x = m_header;
+
+        for(int i = m_level - 1; i >= 0; --i) {
+            while(x->LEVEL[i].FORWARD && !value_compare_less(value, x->LEVEL[i].FORWARD->VALUE)) {
+                x = x->LEVEL[i].FORWARD;
+            }
+        }
+
+        if(x && !value_compare_less(value, x->VALUE)) {
+            return x;
+        }
+
+        return NULL;
+    }
+
 public:
     void Insert(const KEY_TYPE &key, const VALUE_TYPE &value) {
         InsertNode(key, value);
@@ -404,6 +492,54 @@ public:
         DeleteNodeByRangedRank(rank_low, rank_high, [cb](unsigned long rank, Node *n){
                     cb(rank, n->KEY, n->VALUE);
                 });
+    }
+
+    bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        Node *n = GetNodeOfFirstGreaterValue(v);
+
+        if(n) {
+            key = n->KEY;
+            value = n->VALUE;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        Node *n = GetNodeOfFirstGreaterEqualValue(v);
+
+        if(n) {
+            key = n->KEY;
+            value = n->VALUE;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        Node *n = GetNodeOfLastLessValue(v);
+
+        if(n) {
+            key = n->KEY;
+            value = n->VALUE;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        Node *n = GetNodeOfLastLessEqualValue(v);
+
+        if(n) {
+            key = n->KEY;
+            value = n->VALUE;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     std::string DumpLevels() {
@@ -514,6 +650,22 @@ public:
                         cb( rank, key, value );
                     }
                 });
+    }
+
+    bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        return m_skiplist->GetElementOfFirstGreaterValue(v, key, value);
+    }
+
+    bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        return m_skiplist->GetElementOfFirstGreaterEqualValue(v, key, value);
+    }
+
+    bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        return m_skiplist->GetElementOfLastLessValue(v, key, value);
+    }
+
+    bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value) {
+        return m_skiplist->GetElementOfLastLessEqualValue(v, key, value);
     }
 
     std::string DumpLevels() {
