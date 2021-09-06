@@ -586,6 +586,26 @@ public:
         }
     }
 
+    void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+        unsigned long rank;
+        Node *first = include_v_low ? GetNodeOfFirstGreaterEqualValue(v_low, &rank) :
+            GetNodeOfFirstGreaterValue(v_low, &rank);
+
+        if(!first) {
+            return;
+        }
+
+        unsigned long rank2;
+        Node *last = include_v_high ? GetNodeOfLastLessEqualValue(v_high, &rank2) :
+            GetNodeOfLastLessValue(v_high, &rank2);
+
+        if(!last) {
+            return;
+        }
+
+        DeleteByRangedRank(rank, rank2, cb);
+    }
+
     std::string DumpLevels() {
         std::ostringstream ss;
         Node *x = m_header->LEVEL[0].FORWARD;
@@ -603,7 +623,7 @@ public:
             x = x->LEVEL[0].FORWARD;
         }
 
-        ss << "(sumary) " << "[level]=" << m_level << ", " << "[length]=" << m_length << "\n";
+        ss << "(sumary) " << "[level]=" << m_level << ", " << "[length]=" << m_length;
 
         return ss.str();
     }
@@ -719,6 +739,17 @@ public:
     std::string DumpLevels() {
         return m_skiplist->DumpLevels();
     }
+
+    void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+        m_skiplist->DeleteByRangedValue(v_low, include_v_low, v_high, include_v_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value) {
+                    this->m_dict.erase(key);
+
+                    if(cb) {
+                        cb(rank, key, value);
+                    }
+                });
+    }
+
 private:
     ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent> *m_skiplist = NULL;
     std::map<KEY_TYPE, VALUE_TYPE> m_dict;

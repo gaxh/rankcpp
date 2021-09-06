@@ -1,7 +1,7 @@
-#include "zeeset.h"
-#include <string>
 #include <iostream>
+#include <string>
 #include <string.h>
+#include "zeeset.h"
 
 int main() {
     ZeeSet<std::string, unsigned long, 32, 30> rank;
@@ -131,6 +131,24 @@ int main() {
                 std::cout << rd_value_min << "<=v<=" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
                 });
         std::cout << "\n";
+    }
+    
+    {
+        std::cout << rank.DumpLevels() << "\n";
+        std::cout << "rank count: " << rank.Count() << "\n";
+
+        unsigned long rd_value_min = rng() % max_value;
+        unsigned long rd_value_max = rng() % max_value;
+
+        std::cout << "rd_value_min=" << rd_value_min << " " << "rd_value_max=" << rd_value_max << "\n";
+
+        rank.DeleteByRangedValue(rd_value_min, true, rd_value_max, true, [](unsigned long rank, const std::string &key, const unsigned long &value) {
+                std::cout << "delete_value rank " << rank << ": " << "[" << key << "]=" << value << "\n";
+                });
+
+
+        std::cout << rank.DumpLevels() << "\n";
+        std::cout << "rank count: " << rank.Count() << "\n";
     }
 
     return 0;
