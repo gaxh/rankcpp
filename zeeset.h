@@ -71,6 +71,11 @@ public:
         }
     }
 
+    ZeeSkiplist(const ZeeSkiplist &) = delete;
+    ZeeSkiplist(ZeeSkiplist &&) = delete;
+    ZeeSkiplist &operator=(const ZeeSkiplist &) = delete;
+    ZeeSkiplist &operator=(ZeeSkiplist &&) = delete;
+
     unsigned long Length() {
         return m_length;
     }
@@ -642,6 +647,11 @@ public:
     ~ZeeSet() {
         delete m_skiplist;
     }
+
+    ZeeSet(const ZeeSet &) = delete;
+    ZeeSet(ZeeSet &&) = delete;
+    ZeeSet &operator=(const ZeeSet &) = delete;
+    ZeeSet &operator=(ZeeSet &&) = delete;
 
     unsigned long Length() {
         return m_skiplist->Length();
