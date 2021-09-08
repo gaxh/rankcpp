@@ -611,6 +611,45 @@ public:
         DeleteByRangedRank(rank, rank2, cb);
     }
 
+    void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb) {
+        Node *x = GetNodeByRank(rank);
+
+        if(!x) {
+            return;
+        }
+
+        pick_cb(rank, x->KEY, x->VALUE);
+
+        {
+            Node *y = x->BACKWARD;
+            unsigned long r = rank - 1;
+
+            while(y && lower_count) {
+                if(pick_cb(r, y->KEY, y->VALUE)) {
+                    --lower_count;
+                }
+
+                y = y->BACKWARD;
+                --r;
+            }
+        }
+
+        {
+            Node *y = x->LEVEL[0].FORWARD;
+            unsigned long r = rank + 1;
+
+            while(y && upper_count) {
+                if(pick_cb(r, y->KEY, y->VALUE)) {
+                    --upper_count;
+                }
+
+                y = y->LEVEL[0].FORWARD;
+                ++r;
+            }
+
+        }
+    }
+
     std::string DumpLevels() {
         std::ostringstream ss;
         Node *x = m_header->LEVEL[0].FORWARD;
@@ -758,6 +797,10 @@ public:
                         cb(rank, key, value);
                     }
                 });
+    }
+
+    void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb) {
+        m_skiplist->ForeachElementsOfNearbyRank(rank, lower_count, upper_count, pick_cb);
     }
 
 private:

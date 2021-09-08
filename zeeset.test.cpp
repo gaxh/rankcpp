@@ -151,6 +151,22 @@ int main() {
         std::cout << "rank count: " << rank.Count() << "\n";
     }
 
+    {
+        unsigned long rank_value = 1;
+        unsigned long lower_count = 2;
+        unsigned long upper_count = 2;
+
+        std::cout << "rank_value=" << rank_value << " " << "lower_count=" << lower_count << " " << "upper_count=" << upper_count << "\n";
+
+        rank.ForeachElementsOfNearbyRank(rank_value, lower_count, upper_count, [](unsigned long rankv, const std::string &key, const unsigned long &value) -> bool {
+            if(rankv % 2) {
+                return false;
+            }
+            std::cout << "rank " << rankv << ": " << "[" << key << "]=" << value << "\n";
+            return true;
+        });
+    }    
+    
     return 0;
 }
 
