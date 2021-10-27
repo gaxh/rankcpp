@@ -166,7 +166,23 @@ int main() {
             return true;
         });
     }    
-    
+
+    {
+        unsigned long nearby_value = 50;
+        unsigned long lower_count = 2;
+        unsigned long upper_count = 2;
+
+        std::cout << "nearby_value=" << nearby_value << " " << "lower_count=" << lower_count << " " << "upper_count=" << upper_count << "\n";
+
+        rank.ForeachElementsOfNearbyValue(nearby_value, lower_count, upper_count, [](unsigned long rankv, const std::string &key, const unsigned long &value) -> bool {
+            if(rankv % 2) {
+                return false;
+            }
+            std::cout << "rank " << rankv << ": " << "[" << key << "]=" << value << "\n";
+            return true;
+        });
+    }
+
     return 0;
 }
 
