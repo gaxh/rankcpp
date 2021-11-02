@@ -124,7 +124,7 @@ private:
     Node *InsertNode(const KEY_TYPE &key, const VALUE_TYPE &value) {
         Node *update[MAX_LEVEL];
         Node *x;
-        unsigned int rank[MAX_LEVEL];
+        unsigned long rank[MAX_LEVEL];
         int level;
 
         x = m_header;
