@@ -856,6 +856,17 @@ public:
         m_skiplist->ForeachElementsOfNearbyValue(value, lower_count, upper_count, pick_cb);
     }
 
+    bool GetValueByKey(const KEY_TYPE &key, VALUE_TYPE &value) {
+        auto iter = m_dict.find(key);
+
+        if(iter == m_dict.end()) {
+            return false;
+        }
+
+        value = iter->second;
+        return true;
+    }
+
 private:
     ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent> *m_skiplist = NULL;
     std::map<KEY_TYPE, VALUE_TYPE> m_dict;

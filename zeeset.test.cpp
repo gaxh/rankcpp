@@ -183,6 +183,22 @@ int main() {
         });
     }
 
+    {
+        for(unsigned i = 0; i < max_id; ++i) {
+            static char buf[1024];
+            snprintf(buf, sizeof(buf), "K%u", i);
+
+            unsigned long value;
+            bool found = rank.GetValueByKey(std::string(buf), value);
+
+            std::cout << "GetValueByKey, key=" << buf << " found=" << found;
+            if(found) {
+                std::cout << " value=" << value;
+            }
+            std::cout << "\n";
+        }
+    }
+
     return 0;
 }
 
