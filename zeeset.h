@@ -867,6 +867,10 @@ public:
         return true;
     }
 
+    bool HasKey(const KEY_TYPE &key) {
+        return m_dict.count(key) != 0;
+    }
+
 private:
     ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent> *m_skiplist = NULL;
     std::map<KEY_TYPE, VALUE_TYPE> m_dict;

@@ -195,6 +195,9 @@ int main() {
             if(found) {
                 std::cout << " value=" << value;
             }
+
+            std::cout << " HAS_KEY=" << rank.HasKey(std::string(buf));
+
             std::cout << "\n";
         }
     }
