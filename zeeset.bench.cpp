@@ -54,7 +54,37 @@ int main() {
         }
     }
 
-//    std::cout << rank.DumpLevels() << "\n";
+    rank.Clear();
+
+    //std::cout << rank.DumpLevels() << "\n";
+    std::cout << "TestSelf=" << rank.TestSelf() << "\n";
+
+    for(unsigned i = 0; i < max_op; ++i) {
+        unsigned op = (unsigned)rng() % 10;
+        unsigned id = (unsigned)rng() % max_id;
+
+        switch(op) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 6:
+                {
+                    SortData s;
+                    rank.Update(id, s);
+                }
+                break;
+            default:
+                {
+                    rank.Delete(id);
+                }
+                break;
+        }
+    }
+
+    //std::cout << rank.DumpLevels() << "\n";
+    std::cout << "TestSelf=" << rank.TestSelf() << "\n";
     
     return 0;
 }

@@ -3,7 +3,6 @@
 
 // copy from redis zset
 
-#include <vector>
 #include <map>
 #include <random>
 #include <ctime>
@@ -33,18 +32,22 @@ private:
             unsigned long SPAN = 0;
         };
 
-        std::vector<Level> LEVEL;
+        Level LEVEL[MAX_LEVEL];
 
-        Node(int level, const KEY_TYPE &key, const VALUE_TYPE &value) :
-            KEY(key), VALUE(value) {
-                LEVEL.resize(level);
-            }
+        Node(const KEY_TYPE &key, const VALUE_TYPE &value) :
+            KEY(key), VALUE(value) {}
 
-        Node(int level) {
-            LEVEL.resize(level);
-        }
-
+        Node() = default;
         ~Node() = default;
+
+        void Reset() {
+            BACKWARD = NULL;
+
+            for(int i = 0; i < MAX_LEVEL; ++i) {
+                LEVEL[i].FORWARD = NULL;
+                LEVEL[i].SPAN = 0;
+            }
+        }
     };
 
     Node *m_header = NULL;
@@ -55,26 +58,34 @@ private:
     std::mt19937 m_rng;
 public:
     ZeeSkiplist() {
-        m_header = CreateNode(MAX_LEVEL);
+        m_header = CreateNode();
         m_rng.seed(time(NULL));
     }
 
     ~ZeeSkiplist() {
-        Node *x = m_header->LEVEL[0].FORWARD;
-
+        Clear();
         FreeNode(m_header);
-
-        while(x) {
-            Node *next = x->LEVEL[0].FORWARD;
-            FreeNode(x);
-            x = next;
-        }
     }
 
     ZeeSkiplist(const ZeeSkiplist &) = delete;
     ZeeSkiplist(ZeeSkiplist &&) = delete;
     ZeeSkiplist &operator=(const ZeeSkiplist &) = delete;
     ZeeSkiplist &operator=(ZeeSkiplist &&) = delete;
+
+    void Clear() {
+        Node *x = m_header->LEVEL[0].FORWARD;
+
+        while(x) {
+            Node *next = x->LEVEL[0].FORWARD;
+            FreeNode(x);
+            x = next;
+        }
+
+        m_header->Reset();
+        m_tail = NULL;
+        m_length = 0;
+        m_level = 1;
+    }
 
     unsigned long Length() {
         return m_length;
@@ -85,12 +96,12 @@ public:
     }
 
 private:
-    Node *CreateNode(int level, const KEY_TYPE &key, const VALUE_TYPE &value) {
-        return new Node(level, key, value);
+    Node *CreateNode(const KEY_TYPE &key, const VALUE_TYPE &value) {
+        return new Node(key, value);
     }
 
-    Node *CreateNode(int level) {
-        return new Node(level);
+    Node *CreateNode() {
+        return new Node();
     }
 
     void FreeNode(Node *n) {
@@ -122,6 +133,10 @@ private:
     }
 
     Node *InsertNode(const KEY_TYPE &key, const VALUE_TYPE &value) {
+        return InsertNodeOnly(CreateNode(key, value));
+    }
+
+    Node *InsertNodeOnly(Node *n) {
         Node *update[MAX_LEVEL];
         Node *x;
         unsigned long rank[MAX_LEVEL];
@@ -131,9 +146,9 @@ private:
 
         for(int i = m_level - 1; i >= 0; --i) {
             rank[i] = i == (m_level - 1) ? 0 : rank[i + 1];
-            while( x->LEVEL[i].FORWARD && ( value_compare_less(x->LEVEL[i].FORWARD->VALUE, value) ||
-                        ( value_compare_equal(x->LEVEL[i].FORWARD->VALUE, value) &&
-                          key_compare_less(x->LEVEL[i].FORWARD->KEY, key))) ) {
+            while( x->LEVEL[i].FORWARD && ( value_compare_less(x->LEVEL[i].FORWARD->VALUE, n->VALUE) ||
+                        ( value_compare_equal(x->LEVEL[i].FORWARD->VALUE, n->VALUE) &&
+                          key_compare_less(x->LEVEL[i].FORWARD->KEY, n->KEY))) ) {
                 rank[i] += x->LEVEL[i].SPAN;
                 x = x->LEVEL[i].FORWARD;
             }
@@ -151,7 +166,7 @@ private:
             m_level = level;
         }
 
-        x = CreateNode(level, key, value);
+        x = n;
         for(int i = 0; i < level; ++i) {
             x->LEVEL[i].FORWARD = update[i]->LEVEL[i].FORWARD;
             update[i]->LEVEL[i].FORWARD = x;
@@ -250,9 +265,10 @@ private:
         }
 
         RemoveNodeOnly(x, update);
-        FreeNode(x);
+        x->Reset();
+        x->VALUE = new_value;
 
-        return InsertNode(key, new_value);
+        return InsertNodeOnly(x);
     }
 
     unsigned long GetRankOfNode(const KEY_TYPE &key, const VALUE_TYPE &value) {
@@ -706,7 +722,7 @@ public:
         while(x) {
             ss << "(" << ++i << ") " << x << ":" << "[" << x->KEY << "]" << "=" << x->VALUE;
 
-            for(size_t k = 0; k < x->LEVEL.size(); ++k) {
+            for(size_t k = 0; k < MAX_LEVEL && (x->LEVEL[k].FORWARD || x->LEVEL[k].SPAN); ++k) {
                 ss << " {" << k << ":" << x->LEVEL[k].SPAN << ":" << x->LEVEL[k].FORWARD << "}";
             }
 
@@ -719,6 +735,20 @@ public:
 
         return ss.str();
     }
+
+    bool TestSelf() {
+        Node *x = m_header->LEVEL[0].FORWARD;
+
+        while(x && x->LEVEL[0].FORWARD) {
+            if(x->LEVEL[0].FORWARD->VALUE < x->VALUE) {
+                return false;
+            }
+
+            x = x->LEVEL[0].FORWARD;
+        }
+
+        return true;
+    }
 };
 
 template<typename KeyType, typename ValueType, int MaxLevel = 32, int BranchProbPercent = 25>
@@ -727,13 +757,8 @@ public:
     using KEY_TYPE = KeyType;
     using VALUE_TYPE = ValueType;
 
-    ZeeSet() {
-        m_skiplist = new ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent>();
-    }
-
-    ~ZeeSet() {
-        delete m_skiplist;
-    }
+    ZeeSet() = default;
+    ~ZeeSet() = default;
 
     ZeeSet(const ZeeSet &) = delete;
     ZeeSet(ZeeSet &&) = delete;
@@ -741,11 +766,11 @@ public:
     ZeeSet &operator=(ZeeSet &&) = delete;
 
     unsigned long Length() {
-        return m_skiplist->Length();
+        return m_skiplist.Length();
     }
 
     unsigned long MaxRank() {
-        return m_skiplist->MaxRank();
+        return m_skiplist.MaxRank();
     }
 
     size_t Count() {
@@ -754,18 +779,17 @@ public:
 
     void Clear() {
         m_dict.clear();
-        delete m_skiplist;
-        m_skiplist = new ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent>();
+        m_skiplist.Clear();
     }
 
     void Update(const KEY_TYPE &key, const VALUE_TYPE &value) {
         auto iter = m_dict.find(key);
 
         if(iter == m_dict.end()) {
-            m_skiplist->Insert(key, value);
+            m_skiplist.Insert(key, value);
             m_dict[key] = value;
         } else {
-            m_skiplist->Update(key, iter->second, value);
+            m_skiplist.Update(key, iter->second, value);
             m_dict[key] = value;
         }
     }
@@ -777,7 +801,7 @@ public:
             return;
         }
 
-        m_skiplist->Delete(key, iter->second);
+        m_skiplist.Delete(key, iter->second);
         m_dict.erase(iter);
     }
 
@@ -788,23 +812,23 @@ public:
             return 0;
         }
 
-        return m_skiplist->GetRankOfElement(key, iter->second);
+        return m_skiplist.GetRankOfElement(key, iter->second);
     }
 
     bool GetElementByRank(unsigned long rank, KEY_TYPE &key, VALUE_TYPE &value) {
-        return m_skiplist->GetElementByRank(rank, key, value);
+        return m_skiplist.GetElementByRank(rank, key, value);
     }
 
     void GetElementsByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
-        m_skiplist->GetElementsByRangedRank(rank_low, rank_high, cb);
+        m_skiplist.GetElementsByRangedRank(rank_low, rank_high, cb);
     }
 
     void ForeachElements(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
-        m_skiplist->ForeachElements(cb);
+        m_skiplist.ForeachElements(cb);
     }
 
     void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
-        m_skiplist->DeleteByRangedRank(rank_low, rank_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value){
+        m_skiplist.DeleteByRangedRank(rank_low, rank_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value){
                     this->m_dict.erase(key);
 
                     if(cb) {
@@ -814,31 +838,34 @@ public:
     }
 
     bool GetElementOfFirstGreaterValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
-        return m_skiplist->GetElementOfFirstGreaterValue(v, key, value, rank);
+        return m_skiplist.GetElementOfFirstGreaterValue(v, key, value, rank);
     }
 
     bool GetElementOfFirstGreaterEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
-        return m_skiplist->GetElementOfFirstGreaterEqualValue(v, key, value, rank);
+        return m_skiplist.GetElementOfFirstGreaterEqualValue(v, key, value, rank);
     }
 
     bool GetElementOfLastLessValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
-        return m_skiplist->GetElementOfLastLessValue(v, key, value, rank);
+        return m_skiplist.GetElementOfLastLessValue(v, key, value, rank);
     }
 
     bool GetElementOfLastLessEqualValue(const VALUE_TYPE &v, KEY_TYPE &key, VALUE_TYPE &value, unsigned long *rank) {
-        return m_skiplist->GetElementOfLastLessEqualValue(v, key, value, rank);
+        return m_skiplist.GetElementOfLastLessEqualValue(v, key, value, rank);
     }
 
     void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
-        m_skiplist->GetElementsByRangedValue(v_low, include_v_low, v_high, include_v_high, cb);
+        m_skiplist.GetElementsByRangedValue(v_low, include_v_low, v_high, include_v_high, cb);
     }
 
     std::string DumpLevels() {
-        return m_skiplist->DumpLevels();
+        std::ostringstream ss;
+        ss << m_skiplist.DumpLevels() << "\n";
+        ss << "dictionary size=" << Count();
+        return ss.str();
     }
 
     void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
-        m_skiplist->DeleteByRangedValue(v_low, include_v_low, v_high, include_v_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value) {
+        m_skiplist.DeleteByRangedValue(v_low, include_v_low, v_high, include_v_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value) {
                     this->m_dict.erase(key);
 
                     if(cb) {
@@ -848,12 +875,12 @@ public:
     }
 
     void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb) {
-        m_skiplist->ForeachElementsOfNearbyRank(rank, lower_count, upper_count, pick_cb);
+        m_skiplist.ForeachElementsOfNearbyRank(rank, lower_count, upper_count, pick_cb);
     }
 
     void ForeachElementsOfNearbyValue(const VALUE_TYPE &value, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb)
     {
-        m_skiplist->ForeachElementsOfNearbyValue(value, lower_count, upper_count, pick_cb);
+        m_skiplist.ForeachElementsOfNearbyValue(value, lower_count, upper_count, pick_cb);
     }
 
     bool GetValueByKey(const KEY_TYPE &key, VALUE_TYPE &value) {
@@ -871,8 +898,48 @@ public:
         return m_dict.count(key) != 0;
     }
 
+    bool TestSelf() {
+        if(m_dict.size() != m_skiplist.Length()) {
+            return false;
+        }
+
+        if(!m_skiplist.TestSelf()) {
+            return false;
+        }
+
+        std::map<KEY_TYPE, VALUE_TYPE> data;
+        bool result = true;
+
+        ForeachElements([&data, &result](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value){
+                    if(data.count(key)) {
+                        result = result || false;
+                    }
+
+                    data[key] = value;
+                });
+
+        if(!result || m_dict.size() != data.size()) {
+            return false;
+        }
+
+        auto i = m_dict.begin();
+        auto j = data.begin();
+
+        for(; i != m_dict.end() && j != data.end(); ++i, ++j) {
+            if(!(i->first == j->first)) {
+                return false;
+            }
+
+            if(!(i->second == j->second)) {
+                return false;
+            }
+        }
+
+        return i == m_dict.end() && j == data.end();
+    }
+
 private:
-    ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent> *m_skiplist = NULL;
+    ZeeSkiplist<KeyType, ValueType, MaxLevel, BranchProbPercent> m_skiplist;
     std::map<KEY_TYPE, VALUE_TYPE> m_dict;
 };
 

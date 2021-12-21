@@ -202,6 +202,24 @@ int main() {
         }
     }
 
+    std::cout << "TestSelf=" << rank.TestSelf() << "\n";
+
+    {
+        std::cout << "DO CLEAR" << "\n";
+        rank.Clear();
+    }
+
+    {
+        for(unsigned i = 0; i < max_id; ++i) {
+            static char buf[1024];
+            snprintf(buf, sizeof(buf), "K%u", i);
+            rank.Update(std::string(buf), rng() % max_value);
+        }
+    }
+
+    std::cout << rank.DumpLevels() << "\n";
+    std::cout << "TestSelf=" << rank.TestSelf() << "\n";
+
     return 0;
 }
 
