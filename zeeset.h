@@ -607,6 +607,26 @@ public:
         }
     }
 
+    unsigned long GetElementsCountByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high) {
+        unsigned long rank;
+        Node *first = include_v_low ? GetNodeOfFirstGreaterEqualValue(v_low, &rank) :
+            GetNodeOfFirstGreaterValue(v_low, &rank);
+
+        if(!first) {
+            return 0;
+        }
+
+        unsigned long rank2;
+        Node *last = include_v_high ? GetNodeOfLastLessEqualValue(v_high, &rank2) :
+            GetNodeOfLastLessValue(v_high, &rank2);
+
+        if(!last) {
+            return 0;
+        }
+
+        return rank <= rank2 ? rank2 - rank + 1 : 0;
+    }
+
     void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
         unsigned long rank;
         Node *first = include_v_low ? GetNodeOfFirstGreaterEqualValue(v_low, &rank) :
@@ -855,6 +875,10 @@ public:
 
     void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
         m_skiplist.GetElementsByRangedValue(v_low, include_v_low, v_high, include_v_high, cb);
+    }
+
+    unsigned long GetElementsCountByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high) {
+        return m_skiplist.GetElementsCountByRangedValue(v_low, include_v_low, v_high, include_v_high);
     }
 
     std::string DumpLevels() {

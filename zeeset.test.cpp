@@ -115,22 +115,22 @@ int main() {
         rank.GetElementsByRangedValue(rd_value_min, false, rd_value_max, false, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
                 std::cout << rd_value_min << "<v<" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
                 });
-        std::cout << "\n";
+        std::cout << "\nCOUNT=" << rank.GetElementsCountByRangedValue(rd_value_min, false, rd_value_max, false) << "\n";
 
         rank.GetElementsByRangedValue(rd_value_min, true, rd_value_max, false, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
                 std::cout << rd_value_min << "<=v<" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
                 });
-        std::cout << "\n";
+        std::cout << "\nCOUNT=" << rank.GetElementsCountByRangedValue(rd_value_min, true, rd_value_max, false) << "\n";
 
         rank.GetElementsByRangedValue(rd_value_min, false, rd_value_max, true, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
                 std::cout << rd_value_min << "<v<=" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
                 });
-        std::cout << "\n";
+        std::cout << "\nCOUNT=" << rank.GetElementsCountByRangedValue(rd_value_min, false, rd_value_max, true) << "\n";
 
         rank.GetElementsByRangedValue(rd_value_min, true, rd_value_max, true, [=](unsigned long rank, const std::string &key, const unsigned long &value) {
                 std::cout << rd_value_min << "<=v<=" << rd_value_max << ": " << "(" << rank << ":" << key << ")" << " | ";
                 });
-        std::cout << "\n";
+        std::cout << "\nCOUNT=" << rank.GetElementsCountByRangedValue(rd_value_min, true, rd_value_max, true) << "\n";
     }
     
     {
