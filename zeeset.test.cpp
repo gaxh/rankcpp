@@ -220,6 +220,14 @@ int main() {
     std::cout << rank.DumpLevels() << "\n";
     std::cout << "TestSelf=" << rank.TestSelf() << "\n";
 
+    {
+        std::cout << "DO OPTIMIZE" << "\n";
+        rank.Optimize();
+    }
+
+    std::cout << rank.DumpLevels() << "\n";
+    std::cout << "TestSelf=" << rank.TestSelf() << "\n";
+
     return 0;
 }
 

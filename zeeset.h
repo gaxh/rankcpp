@@ -9,6 +9,7 @@
 #include <functional>
 #include <sstream>
 #include <cassert>
+#include <vector>
 
 // KeyType and ValueType must be comparable
 template<typename KeyType, typename ValueType, int MaxLevel = 32, int BranchProbPercent = 25>
@@ -769,6 +770,30 @@ public:
 
         return true;
     }
+
+    // re-construct tree-like structure
+    void Optimize() {
+        std::vector<Node *> all_nodes;
+        all_nodes.reserve(m_length);
+
+        for(Node *x = m_header->LEVEL[0].FORWARD; x; ) {
+            Node *next = x->LEVEL[0].FORWARD;
+
+            x->Reset();
+            all_nodes.emplace_back(x);
+
+            x = next;
+        }
+
+        m_header->Reset();
+        m_tail = NULL;
+        m_length = 0;
+        m_level = 1;
+
+        for(Node *x: all_nodes) {
+            InsertNodeOnly(x);
+        }
+    }
 };
 
 template<typename KeyType, typename ValueType, int MaxLevel = 32, int BranchProbPercent = 25>
@@ -960,6 +985,10 @@ public:
         }
 
         return i == m_dict.end() && j == data.end();
+    }
+
+    void Optimize() {
+        return m_skiplist.Optimize();
     }
 
 private:
