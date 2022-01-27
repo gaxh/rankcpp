@@ -346,6 +346,21 @@ private:
         }
     }
 
+    void ForeachNodeReverse(std::function<void(unsigned long rank, Node *)> cb) {
+        if(!m_tail) {
+            return;
+        }
+
+        Node *x = m_tail;
+        unsigned long n = m_length;
+
+        while(x) {
+            cb(n--, x);
+
+            x = x->BACKWARD;
+        }
+    }
+
     void DeleteNodeByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long rank, Node *)> cb) {
         if(rank_low > rank_high) {
             return;
@@ -526,6 +541,12 @@ public:
 
     void ForeachElements(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
         ForeachNode([cb](unsigned long rank, Node *n){
+                    cb(rank, n->KEY, n->VALUE);
+                });
+    }
+
+    void ForeachElementsReverse(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+        ForeachNodeReverse([cb](unsigned long rank, Node *n){
                     cb(rank, n->KEY, n->VALUE);
                 });
     }
@@ -870,6 +891,10 @@ public:
 
     void ForeachElements(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
         m_skiplist.ForeachElements(cb);
+    }
+
+    void ForeachElementsReverse(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+        m_skiplist.ForeachElementsReverse(cb);
     }
 
     void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {

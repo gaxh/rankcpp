@@ -228,6 +228,26 @@ int main() {
     std::cout << rank.DumpLevels() << "\n";
     std::cout << "TestSelf=" << rank.TestSelf() << "\n";
 
+    rank.ForeachElements([](unsigned long rank, const std::string &key, const unsigned long &value){
+            std::cout << "foreach rank " << rank << ": " << "[" << key << "]=" << value << "\n";
+            });
+
+    rank.ForeachElementsReverse([](unsigned long rank, const std::string &key, const unsigned long &value){
+            std::cout << "foreach rank reverse " << rank << ": " << "[" << key << "]=" << value << "\n";
+            });
+
+
+    rank.Clear();
+
+    rank.ForeachElements([](unsigned long rank, const std::string &key, const unsigned long &value){
+            std::cout << "foreach rank " << rank << ": " << "[" << key << "]=" << value << "\n";
+            });
+
+    rank.ForeachElementsReverse([](unsigned long rank, const std::string &key, const unsigned long &value){
+            std::cout << "foreach rank reverse " << rank << ": " << "[" << key << "]=" << value << "\n";
+            });
+
+
     return 0;
 }
 
