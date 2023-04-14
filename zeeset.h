@@ -285,7 +285,7 @@ private:
                 x = x->LEVEL[i].FORWARD;
             }
 
-            if(key_compare_equal(x->KEY, key)) {
+            if(x && key_compare_equal(x->KEY, key) && value_compare_equal(x->VALUE, value)) {
                 return rank;
             }
         }
