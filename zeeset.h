@@ -6,7 +6,6 @@
 #include <map>
 #include <random>
 #include <ctime>
-#include <functional>
 #include <sstream>
 #include <cassert>
 #include <vector>
@@ -316,7 +315,8 @@ private:
         return NULL;
     }
 
-    void GetNodeByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long rank, Node *)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, Node *)> */
+    void GetNodeByRangedRank(unsigned long rank_low, unsigned long rank_high, Function cb) {
         if(rank_low > rank_high) {
             return;
         }
@@ -335,7 +335,8 @@ private:
         }
     }
 
-    void ForeachNode(std::function<void(unsigned long rank, Node *)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, Node *)> */
+    void ForeachNode(Function cb) {
         Node *x = m_header->LEVEL[0].FORWARD;
         unsigned long n = 0;
 
@@ -346,7 +347,8 @@ private:
         }
     }
 
-    void ForeachNodeReverse(std::function<void(unsigned long rank, Node *)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, Node *)> */
+    void ForeachNodeReverse(Function cb) {
         if(!m_tail) {
             return;
         }
@@ -361,7 +363,8 @@ private:
         }
     }
 
-    void DeleteNodeByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long rank, Node *)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, Node *)> */
+    void DeleteNodeByRangedRank(unsigned long rank_low, unsigned long rank_high, Function cb) {
         if(rank_low > rank_high) {
             return;
         }
@@ -533,25 +536,29 @@ public:
         }
     }
 
-    void GetElementsByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void GetElementsByRangedRank(unsigned long rank_low, unsigned long rank_high, Function cb) {
         GetNodeByRangedRank(rank_low, rank_high, [cb](unsigned long rank, Node *n) {
                     cb(rank, n->KEY, n->VALUE);
                 });
     }
 
-    void ForeachElements(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElements(Function cb) {
         ForeachNode([cb](unsigned long rank, Node *n){
                     cb(rank, n->KEY, n->VALUE);
                 });
     }
 
-    void ForeachElementsReverse(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElementsReverse(Function cb) {
         ForeachNodeReverse([cb](unsigned long rank, Node *n){
                     cb(rank, n->KEY, n->VALUE);
                 });
     }
 
-    void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, Function cb) {
         DeleteNodeByRangedRank(rank_low, rank_high, [cb](unsigned long rank, Node *n){
                     cb(rank, n->KEY, n->VALUE);
                 });
@@ -605,7 +612,8 @@ public:
         }
     }
 
-    void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, Function cb) {
         unsigned long rank;
         Node *first = include_v_low ? GetNodeOfFirstGreaterEqualValue(v_low, &rank) :
             GetNodeOfFirstGreaterValue(v_low, &rank);
@@ -649,7 +657,8 @@ public:
         return rank <= rank2 ? rank2 - rank + 1 : 0;
     }
 
-    void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, Function cb) {
         unsigned long rank;
         Node *first = include_v_low ? GetNodeOfFirstGreaterEqualValue(v_low, &rank) :
             GetNodeOfFirstGreaterValue(v_low, &rank);
@@ -669,7 +678,8 @@ public:
         DeleteByRangedRank(rank, rank2, cb);
     }
 
-    void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb) {
+    template<typename Function> /* std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, Function pick_cb) {
         Node *x = GetNodeByRank(rank);
 
         if(!x) {
@@ -708,7 +718,8 @@ public:
         }
     }
 
-    void ForeachElementsOfNearbyValue(const VALUE_TYPE &value, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb)
+    template<typename Function> /* std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElementsOfNearbyValue(const VALUE_TYPE &value, unsigned long lower_count, unsigned long upper_count, Function pick_cb)
     {
         unsigned long rank = 0;
         Node *x = GetNodeOfFirstGreaterEqualValue(value, &rank);
@@ -885,19 +896,23 @@ public:
         return m_skiplist.GetElementByRank(rank, key, value);
     }
 
-    void GetElementsByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void GetElementsByRangedRank(unsigned long rank_low, unsigned long rank_high, Function cb) {
         m_skiplist.GetElementsByRangedRank(rank_low, rank_high, cb);
     }
 
-    void ForeachElements(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElements(Function cb) {
         m_skiplist.ForeachElements(cb);
     }
 
-    void ForeachElementsReverse(std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElementsReverse(Function cb) {
         m_skiplist.ForeachElementsReverse(cb);
     }
 
-    void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void DeleteByRangedRank(unsigned long rank_low, unsigned long rank_high, Function cb) {
         m_skiplist.DeleteByRangedRank(rank_low, rank_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value){
                     this->m_dict.erase(key);
 
@@ -923,7 +938,8 @@ public:
         return m_skiplist.GetElementOfLastLessEqualValue(v, key, value, rank);
     }
 
-    void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void GetElementsByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, Function cb) {
         m_skiplist.GetElementsByRangedValue(v_low, include_v_low, v_high, include_v_high, cb);
     }
 
@@ -938,7 +954,8 @@ public:
         return ss.str();
     }
 
-    void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> cb) {
+    template<typename Function> /* std::function<void(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void DeleteByRangedValue(const VALUE_TYPE &v_low, bool include_v_low, const VALUE_TYPE &v_high, bool include_v_high, Function cb) {
         m_skiplist.DeleteByRangedValue(v_low, include_v_low, v_high, include_v_high, [this, cb](unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value) {
                     this->m_dict.erase(key);
 
@@ -948,11 +965,13 @@ public:
                 });
     }
 
-    void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb) {
+    template<typename Function> /* std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElementsOfNearbyRank(unsigned long rank, unsigned long lower_count, unsigned long upper_count, Function pick_cb) {
         m_skiplist.ForeachElementsOfNearbyRank(rank, lower_count, upper_count, pick_cb);
     }
 
-    void ForeachElementsOfNearbyValue(const VALUE_TYPE &value, unsigned long lower_count, unsigned long upper_count, std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> pick_cb)
+    template<typename Function> /* std::function<bool(unsigned long rank, const KEY_TYPE &key, const VALUE_TYPE &value)> */
+    void ForeachElementsOfNearbyValue(const VALUE_TYPE &value, unsigned long lower_count, unsigned long upper_count, Function pick_cb)
     {
         m_skiplist.ForeachElementsOfNearbyValue(value, lower_count, upper_count, pick_cb);
     }
